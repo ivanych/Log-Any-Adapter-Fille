@@ -1,4 +1,4 @@
-use 5.006;
+use 5.008001;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -18,8 +18,8 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'utf8::all' => 0,
+        'Log::Any'  => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Log-Any-Adapter-Fille-*' },

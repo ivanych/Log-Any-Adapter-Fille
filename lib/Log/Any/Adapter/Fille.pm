@@ -1,111 +1,135 @@
 package Log::Any::Adapter::Fille;
 
-use 5.006;
+#
+# Advanced adapter for logging to files
+#
+
+use 5.008001;
 use strict;
 use warnings;
+use utf8::all;
 
-=head1 NAME
+use Config;
+use Fcntl qw(:flock);
+use POSIX;
+use IO::File;
+use Time::HiRes qw(gettimeofday);
+use Log::Any '$log';
+use Log::Any::Adapter::Util ();
 
-Log::Any::Adapter::Fille - The great new Log::Any::Adapter::Fille!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
+use base qw/Log::Any::Adapter::Base/;
 
 our $VERSION = '0.01';
 
+#---
 
-=head1 SYNOPSIS
+# Value assignment is needed for futher learning in the PRINT method where the message came from
+$SIG{__DIE__} = sub { $@ = 'DIE' };
+$SIG{__WARN__} = sub { $@ = 'WARN'; print STDERR @_ };
 
-Quick summary of what the module does.
+# We connect the descriptor STDERR with the current packet for interception of all error messages
+tie *STDERR, __PACKAGE__;
 
-Perhaps a little code snippet.
+# Redefinition of standard constructor for the connnected descriptor STDERR
+sub TIEHANDLE {
+    my $class = shift;
 
-    use Log::Any::Adapter::Fille;
-
-    my $foo = Log::Any::Adapter::Fille->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
+    bless {}, $class;
 }
 
-=head2 function2
+# Redefinition of standart method PRINT for the connected descriptor STDERR
+sub PRINT {
+    my ( $self, @msg ) = @_;
 
-=cut
+    chomp(@msg);
 
-sub function2 {
+    # Current value in $@ says where the message came from
+    if ( $@ eq 'DIE' ) {
+        $log->emergency(@msg);
+    }
+    elsif ( $@ eq 'WARN' ) {
+        $log->warning(@msg);
+    }
+    else {
+        $log->notice(@msg);
+    }
+
+    # Reset to the default value
+    $@ = '';
 }
 
-=head1 AUTHOR
+# Redefinition of standard methode BINMODE for the connected descriptor STDERR
+# In fact this method makes no sense here but it has to be fulfiled for the backward compatibility
+# with the modules that call this method for their own purposes
+sub BINMODE { }
 
-Mikhail Ivanov, C<< <m.ivanych at gmail.com> >>
+# Log levels (names satisfy the official log names Log::Any)
+my %levels = (
+    0 => 'EMERGENCY',
+    1 => 'ALERT',
+    2 => 'CRITICAL',
+    3 => 'ERROR',
+    4 => 'WARNING',
+    5 => 'NOTICE',
+    6 => 'INFO',
+    7 => 'DEBUG',
+    8 => 'TRACE',
+);
 
-=head1 BUGS
+my $HAS_FLOCK = $Config{d_flock} || $Config{d_fcntl_can_lock} || $Config{d_lockf};
 
-Please report any bugs or feature requests to C<bug-log-any-adapter-fille at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Log-Any-Adapter-Fille>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+sub new {
+    my ( $class, @args ) = @_;
 
+    return $class->SUPER::new(@args);
+}
 
+sub init {
+    my $self = shift;
 
+    if ( exists $self->{log_level} ) {
+        $self->{log_level} = Log::Any::Adapter::Util::numeric_level( $self->{log_level} )
+            unless $self->{log_level} =~ /^\d+$/;
+    }
+    else {
+        $self->{log_level} = Log::Any::Adapter::Util::numeric_level('info');
+    }
 
-=head1 SUPPORT
+    open( $self->{fh}, ">>", $self->{file} ) or die "Не удалось открыть файл '$self->{file}': $!";
+    $self->{fh}->autoflush(1);
+}
 
-You can find documentation for this module with the perldoc command.
+foreach my $method ( Log::Any::Adapter::Util::logging_methods() ) {
+    no strict 'refs';    ## no critic (ProhibitNoStrict)
 
-    perldoc Log::Any::Adapter::Fille
+    my $method_level = Log::Any::Adapter::Util::numeric_level($method);
 
+    *{$method} = sub {
+        my ( $self, $text ) = @_;
 
-You can also look for information at:
+        return if $method_level > $self->{log_level};
 
-=over 4
+        my ( $sec, $msec ) = gettimeofday;
 
-=item * RT: CPAN's request tracker (report bugs here)
+        # Log line in "date time pid level message" format
+        my $msg = sprintf( "%s.%.6d %5d %s %s\n", strftime( "%Y-%m-%d %H:%M:%S", localtime($sec) ), $msec, $$, $levels{$method_level}, $text );
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Log-Any-Adapter-Fille>
+        flock( $self->{fh}, LOCK_EX ) if $HAS_FLOCK;
+        $self->{fh}->print($msg);
+        flock( $self->{fh}, LOCK_UN ) if $HAS_FLOCK;
+        }
+}
 
-=item * AnnoCPAN: Annotated CPAN documentation
+foreach my $method ( Log::Any::Adapter::Util::detection_methods() ) {
+    no strict 'refs';    ## no critic (ProhibitNoStrict)
 
-L<http://annocpan.org/dist/Log-Any-Adapter-Fille>
+    my $base = substr( $method, 3 );
 
-=item * CPAN Ratings
+    my $method_level = Log::Any::Adapter::Util::numeric_level($base);
 
-L<http://cpanratings.perl.org/d/Log-Any-Adapter-Fille>
+    *{$method} = sub {
+        return !!( $method_level <= $_[0]->{log_level} );
+        }
+}
 
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Log-Any-Adapter-Fille/>
-
-=back
-
-
-=head1 ACKNOWLEDGEMENTS
-
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2015 Mikhail Ivanov.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See L<http://dev.perl.org/licenses/> for more information.
-
-
-=cut
-
-1; # End of Log::Any::Adapter::Fille
+1;
