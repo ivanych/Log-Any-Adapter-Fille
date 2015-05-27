@@ -22,6 +22,20 @@ WriteMakefile(
         'utf8::all' => 0,
         'Log::Any'  => 0,
     },
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        resources   => {
+            license     => [ 'http://dev.perl.org/licenses/' ],
+            bugtracker  => {
+                web    => 'https://github.com/ivanych/Log-Any-Adapter-Fille/issues',
+            },
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/ivanych/Log-Any-Adapter-Fille.git',
+                web  => 'https://github.com/ivanych/Log-Any-Adapter-Fille',
+            },
+        },
+    },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Log-Any-Adapter-Fille-*' },
 );
