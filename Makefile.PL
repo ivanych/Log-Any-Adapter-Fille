@@ -10,7 +10,7 @@ WriteMakefile(
     ABSTRACT_FROM    => 'lib/Log/Any/Adapter/Fille.pm',
     LICENSE          => 'perl_5',
     PL_FILES         => {},
-    MIN_PERL_VERSION => 5.006,
+    MIN_PERL_VERSION => 5.008001,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
     },
