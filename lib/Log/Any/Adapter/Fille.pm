@@ -133,3 +133,15 @@ foreach my $method ( Log::Any::Adapter::Util::detection_methods() ) {
 }
 
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Log::Any::Adapter::Fille - Advanced adapter for logging to files
+
+=cut
