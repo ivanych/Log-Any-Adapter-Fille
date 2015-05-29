@@ -1,5 +1,8 @@
 Revision history for Log-Any-Adapter-Fille
 
+0.03    2015-05-27
+        - Capture of output to STDERR was removed from the module
+
 0.02    2015-05-27
         - As in the module Log::Any minimum version of Perl 5.008001 is specified
         - Part of documentation in POD format is added.
