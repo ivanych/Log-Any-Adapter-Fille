@@ -4,13 +4,12 @@ use strict;
 use warnings;
 use utf8::all;
 
-use Test::More tests => 3;
+use Test::More tests => 1;
 
 use File::Temp qw(tempfile);
 
 use Log::Any qw($log);
 use Log::Any::Adapter;
-use Log::Any::Adapter::Util qw(read_file);
 
 #---
 
@@ -27,9 +26,3 @@ my $message = 'Сообщение в лог';
 
 $log->info($message);
 like( <$fh>, "/INFO $message/", "Standard method" );
-
-print STDERR $message;
-like( <$fh>, "/NOTICE $message/", "Capture 'print STDERR'" );
-
-warn $message;
-like( <$fh>, "/WARNING $message/", "Capture 'warn'" );
