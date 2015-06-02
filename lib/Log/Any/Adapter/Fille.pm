@@ -18,7 +18,7 @@ use Log::Any::Adapter::Util ();
 
 use base qw/Log::Any::Adapter::Base/;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 #---
 
