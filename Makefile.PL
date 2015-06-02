@@ -19,8 +19,8 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
-        'utf8::all' => 0,
         'Log::Any'  => 0,
+        'utf8::all' => 0,
     },
     META_MERGE => {
         'meta-spec' => { version => 2 },

@@ -14,54 +14,13 @@ use Fcntl qw(:flock);
 use POSIX;
 use IO::File;
 use Time::HiRes qw(gettimeofday);
-use Log::Any '$log';
 use Log::Any::Adapter::Util ();
 
 use base qw/Log::Any::Adapter::Base/;
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 #---
-
-# Value assignment is needed for futher learning in the PRINT method where the message came from
-$SIG{__DIE__} = sub { $@ = 'DIE' };
-$SIG{__WARN__} = sub { $@ = 'WARN'; print STDERR @_ };
-
-# We connect the descriptor STDERR with the current packet for interception of all error messages
-tie *STDERR, __PACKAGE__;
-
-# Redefinition of standard constructor for the connnected descriptor STDERR
-sub TIEHANDLE {
-    my $class = shift;
-
-    bless {}, $class;
-}
-
-# Redefinition of standart method PRINT for the connected descriptor STDERR
-sub PRINT {
-    my ( $self, @msg ) = @_;
-
-    chomp(@msg);
-
-    # Current value in $@ says where the message came from
-    if ( $@ eq 'DIE' ) {
-        $log->emergency(@msg);
-    }
-    elsif ( $@ eq 'WARN' ) {
-        $log->warning(@msg);
-    }
-    else {
-        $log->notice(@msg);
-    }
-
-    # Reset to the default value
-    $@ = '';
-}
-
-# Redefinition of standard methode BINMODE for the connected descriptor STDERR
-# In fact this method makes no sense here but it has to be fulfiled for the backward compatibility
-# with the modules that call this method for their own purposes
-sub BINMODE { }
 
 # Log levels (names satisfy the official log names Log::Any)
 my %levels = (
