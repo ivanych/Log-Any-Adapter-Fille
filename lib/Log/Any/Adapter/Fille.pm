@@ -124,14 +124,14 @@ Log::Any::Adapter::Fille - Advanced adapter for logging to files
 
 Adapter C<Log::Any::Adapter::Fille> is intended for logging messages to the
 file. Behavior of this adapter resembles simple built-in adapter behavior
-L<Log::Any::Adapter:File|Log::Any::Adapter:File>, but differs from it in
+L<Log::Any::Adapter::File|Log::Any::Adapter::File>, but differs from it in
 several details.
 
 The C<log_level> attribute may be set to define a minimum level to log.
 
 Category is ignored.
 
-=head1 Difference from built-in adapter File
+=head1 DIFFERENCE FROM BUILT-IN ADAPTER FILE
 
 Adapter C<Fille> registers logs in advanced format
 C<< <date> <time> <PID> <log_level> <message> >>, unlike built-in adapter
